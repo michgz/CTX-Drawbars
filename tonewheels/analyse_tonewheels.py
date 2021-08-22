@@ -13,9 +13,9 @@ import time
 from scipy.signal import decimate, hilbert, stft, chirp, welch
 import numpy
 import matplotlib.pyplot as plt
+import matplotlib
 import textwrap
 import pickle
-#from fitting import fitting
 import itertools
 
 import sys
@@ -62,7 +62,8 @@ os.system("amixer -D pulse cset iface=MIXER,name='Capture Volume' {0}".format(10
 # The following are the Category 12 ("Split") numbers that sound like monophonic tonewheel
 # recordings in a CT-X3000 (probably also CT-X5000).
 #
-CAT12_VALUES = [1015,1016,1017,1019,1020,1021,1022,1027,1029,1030,1031,1033]
+CAT12_VALUES = list (range(73,78)) + list(range(1012,1025)) + list(range(1030,1032))
+
 
 
 # The user tone number for the experimental data. 801-900
@@ -185,7 +186,7 @@ def set_single_parameter(pp, data, category=5, memory=1, parameter_set=0, block0
 
 
 
-
+os.write(f_midi, struct.pack("BBB", 0xB0, 123, 0))   # All Notes Off
 
 
 # Open PyAudio for doing the recording
@@ -195,61 +196,21 @@ RATE = 44100    # units of Hz. Probably only certain values are allowed, e.g.
                 #  24000, 44100, 48000, 96000, ....
 FRAMES = 1024
 
-mm = 0
-lx = ()
-
-def callback_audio(in_data,      # recorded data if input=True; else None
-         frame_count,  # number of frames
-         time_info,    # dictionary
-         status_flags):
-  global mm
-  global lx
-  
-  
-  result = numpy.frombuffer(in_data, dtype=numpy.float32)
-  result = numpy.reshape(result, (frame_count, 2))
-  result = result[:, 0]
-  lx += (result, )
-  
-  if frame_count != FRAMES:
-    raise Exception("Expecting frame of {0}, got {1}".format(FRAMES, frame_count))
-  
-  if status_flags != 0:
-    raise Exception("Flags {0}. Total frames so far: {1}".format(status_flags, len(lx)))
-
-  mm += 1
-  
-  if mm >= 14*12:
-    return (None, pyaudio.paComplete)
-  
-  return (None, pyaudio.paContinue)
-
-
-
 
 p = pyaudio.PyAudio()
 
-x = p.open(format=pyaudio.paFloat32,
-            channels=2,
-            rate=RATE,
-            input=True,
-            input_device_index=pulse_device_index,
-            start=False,
-            frames_per_buffer=FRAMES,
-            stream_callback=callback_audio)
-
-
-
-#CAT12_VALUES = [1310,1311]
+NOTES = [40, 60, 72]
 
 for CAT12 in CAT12_VALUES:
   
   set_single_parameter(4, CAT12, memory=1, category=5)
+  
+  print(CAT12)
 
 
   os.write(f_midi, struct.pack("8B", 0xB0, 0x00, 65, 0xB0, 0x20, 0, 0xC0, DEST-801))
 
-  for NOTE in [36, 60, 84]:   # Three octaves of "C"
+  for NOTE in NOTES:   # Three octaves of "C"
     time.sleep(0.2)
     os.write(f_midi, struct.pack("3B", 0x90, NOTE, 0x7F))
     time.sleep(0.2)
@@ -276,17 +237,26 @@ for CAT12 in CAT12_VALUES:
     
     f, Px = welch(result, fs=RATE, nperseg = 2*1024)
     
+    plt.figure()
     plt.semilogy(f, Px)
     plt.xlim(0,5000)
     plt.ylim(1.E-12, 1.E-6)
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Amplitude')
     
     midi_freq = 440. * numpy.power(2., (float(NOTE) - 69.)/12. )
     peak_freq = f[ numpy.argmax(Px) ]
     semitones = 12. * numpy.log2( peak_freq / midi_freq )
     print("CAT 12: {0} NOTE {1}:\tPeak frequency: {2:.5f} Hz (offset {3:.2f} semitones)".format(CAT12, NOTE, peak_freq, semitones))
     
+    plt.semilogy([midi_freq, midi_freq], [4.5E-12, 8.E-7], '-', c=matplotlib.colors.CSS4_COLORS['pink'])
+    plt.title("SPLIT: {0}, Midi NOTE: {1}".format(CAT12, NOTE))
+    
+    plt.legend(['Measured', 'Nominal tonic'])
+    
     #plt.show()
-    plt.savefig("{0}_{1}.png".format(NOTE, CAT12), format='png')
+    plt.savefig("{1:04d}_{0}.png".format(NOTE, CAT12), format='png')
+    plt.close()
 
 
 p.terminate()
