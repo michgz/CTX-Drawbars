@@ -62,7 +62,7 @@ os.system("amixer -D pulse cset iface=MIXER,name='Capture Volume' {0}".format(10
 # The following are the Category 12 ("Split") numbers that sound like monophonic tonewheel
 # recordings in a CT-X3000 (probably also CT-X5000).
 #
-CAT12_VALUES = list (range(73,78)) + list(range(1012,1025)) + list(range(1030,1032))
+CAT12_VALUES = list(range(73,78)) + [726,727,729,742] + list(range(1012,1025)) + list(range(1030,1032)) + [1310,1311]
 
 
 
