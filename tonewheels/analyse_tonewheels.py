@@ -83,6 +83,11 @@ y[0x87] = 0
 y[0x10F] = 0
 y[0x1A6:0x1B2] = "---".ljust(12, " ").encode("ascii")
 
+y[0x116] = 0x00   # no vibrato
+y[0x1A5] = y[0x1A5] & 0xFE  # no DSP
+for i in range(4):
+  y[0x136+0x12*i:0x136+0x12*(i+1)] = b'\xff\x3f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'  # _really_ no DSP!
+
 upload_ac7_internal(DEST-801, bytes(y), memory=1, category=3)
 
 
@@ -210,7 +215,7 @@ for CAT12 in CAT12_VALUES:
 
   os.write(f_midi, struct.pack("8B", 0xB0, 0x00, 65, 0xB0, 0x20, 0, 0xC0, DEST-801))
 
-  for NOTE in NOTES:   # Three octaves of "C"
+  for NOTE in NOTES:   # Try at various different pitches
     time.sleep(0.2)
     os.write(f_midi, struct.pack("3B", 0x90, NOTE, 0x7F))
     time.sleep(0.2)
@@ -239,10 +244,10 @@ for CAT12 in CAT12_VALUES:
     
     plt.figure()
     plt.semilogy(f, Px)
-    plt.xlim(0,5000)
+    plt.xlim(0,6000)
     plt.ylim(1.E-12, 1.E-6)
     plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Amplitude')
+    plt.ylabel('Power')
     
     midi_freq = 440. * numpy.power(2., (float(NOTE) - 69.)/12. )
     peak_freq = f[ numpy.argmax(Px) ]
