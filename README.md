@@ -10,7 +10,7 @@ Works on CT-X3000 and CT-X5000. Probably not on CT-X700/800.
 3. Send the .syx file to the keyboard. How to do this depends on the operating system that you are using:
 
 - Linux:
-Just send directly with the `amidi` command. It's possible to find the name of the port with `amidi -l` -- in the example below, it is "hw:1,0,0":
+Send directly using the `amidi` command. It's possible to find the name of the port with `amidi -l` - in the example below, it is "hw:1,0,0":
 ```
 > amidi -l
 Dir Device    Name
@@ -19,7 +19,7 @@ IO  hw:1,0,0  CASIO USB-MIDI MIDI 1
 ```
 
 - Windows:
-Any program that can send binary SYX files to a MIDI port. MIDI-Ox should be able to do it.
+Use any program that can send binary SYX files to a MIDI port, for example MIDI-Ox.
 
 ### Regenerating the files
 
