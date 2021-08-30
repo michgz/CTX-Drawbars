@@ -25,11 +25,12 @@ import sys
 # We're importing from a sibling directory.
 sys.path.append('..')
 sys.path.append('../internal')
+sys.path.append('../scripts')
 
 
 from internal.sysex_comms_internal import get_single_parameter, upload_ac7_internal, download_ac7_internal    #, set_single_parameter
 
-import drawbar_organ
+import scripts.drawbar_organ as drawbar_organ
 
 
 

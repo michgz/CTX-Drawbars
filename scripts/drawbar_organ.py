@@ -1,5 +1,5 @@
 '''
-Make a custom drawbar organ instrument for the CT-X3000/5000
+Functions for making a custom drawbar organ instrument for the CT-X3000/5000
 '''
 
 import os
@@ -8,7 +8,6 @@ import struct
 import textwrap
 import sys
 
-from internal.sysex_comms_internal import get_single_parameter, upload_ac7_internal, download_ac7_internal    #, set_single_parameter
 
 
 
@@ -165,29 +164,23 @@ def upload_sysex(sysex, dev_name="/dev/midi1"):
 
 
 '''
-function:  write_experimental_tone
-brief:  Writes a tone to user tone memory which can access a Versatile instrument
+function:  experimental_tone
+brief:  Returns a tone file which can access a Versatile instrument
         as set up by the functions above
 '''
-def write_experimental_tone(dest):
-
-  if dest not in range(801,901):
-    raise Exception("DEST variable should be between 801-900 (is {0}).".format(dest))
+def experimental_tone():
 
   # Set up Category 3. Start with preset data 089 ("CLICK ORGAN")
   #
-  with open(os.path.join("internal", "Data", "089CLICKORG.TON"), "rb") as f2:
+  with open(os.path.join(os.path.dirname(__file__), "..", "internal", "Data", "089CLICKORG.TON"), "rb") as f2:
     y = bytearray(f2.read()[0x20:-4])
   y[0x82:0x84] = struct.pack("<H", 30)
   y[0x10A:0x10C] = struct.pack("<H", 0)
   y[0x87] = 6
   y[0x10F] = 0
   y[0x1A6:0x1B2] = "Drawbar".ljust(12, " ").encode("ascii")
-
-  upload_ac7_internal(dest-801, bytes(y), memory=1, category=3)
-
-
-
+  
+  return bytes(y)
 
 
 
